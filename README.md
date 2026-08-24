@@ -16,6 +16,7 @@
 [Desk & Multitool APIs](#-workbench--desk-environment-integration) &bull;
 [B-ASM Microcode](#-b-asm-microcode-instruction-set) &bull;
 [25 Physics Theorems](#-25-fundamental-earth-theorems) &bull;
+[Benchmarks & Trade-offs](BENCHMARKS_AND_ANALYSIS.md) &bull;
 [Documentation](#-interactive-web-companion--documentation)
 
 </div>
@@ -206,6 +207,7 @@ Built-in analytical calculation engines based on Elastic Aether $R(3)$ Twist Hyd
 │       ├── style.css           # Notion-style CSS design system
 │       └── app.js              # Client state, SVG braid ribbon, and ScrollSpy engine
 ├── RETRO_SETUN_24_SPEC.md      # Detailed hardware architecture specification
+├── BENCHMARKS_AND_ANALYSIS.md  # Latencies, radix economy, historical comparisons & trade-offs
 ├── theorem_summary.txt         # Theoretical reference for all 25 EARTH theorems
 ├── all_theorems.json           # Raw publication theorems dataset
 ├── audio_test.lua              # Diagnostic audio frequency calibration script
