@@ -1,0 +1,29 @@
+{
+  "name": "5500fp-setun-24",
+  "version": "2.5.0",
+  "description": "24-Trit Balanced Ternary Quantum Computer, Topological B-ASM VM, and Hardware Bridge for Retro Gadgets",
+  "main": "bridge/bridge_server.js",
+  "scripts": {
+    "start": "node bridge/bridge_server.js",
+    "bridge": "node bridge/bridge_server.js",
+    "test": "node -c bridge/bridge_server.js && node -c bridge/public/app.js && echo 'All syntax checks passed!'"
+  },
+  "keywords": [
+    "retro-gadgets",
+    "balanced-ternary",
+    "quantum-computing",
+    "qutrit",
+    "su3",
+    "topological-knots",
+    "soliton",
+    "oscilloscope",
+    "quasicrystal",
+    "microcode-vm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kirakenjiro/RetroGadgets5500FP"
+  },
+  "author": "kirakenjiro",
+  "license": "MIT"
+}

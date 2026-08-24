@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5500FP Setun 24 Hardware Studio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- KaTeX Math Engine -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+
+    <main class="page-container">
+
+        <!-- Compact Page Header -->
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">5500FP Setun 24 Hardware Studio</h1>
+                <p class="page-desc">24-trit balanced ternary bus control, B-ASM microcode IDE, and live telemetry bridge.</p>
+            </div>
+            <div class="header-status">
+                <div id="connectionStatus" class="status-pill status-offline">
+                    <span class="status-dot"></span>
+                    <span id="connectionLabel">Disconnected</span>
+                </div>
+                <button id="btnOpenDocs" class="btn-ghost" title="Open complete hardware and command documentation">📖 Documentation</button>
+                <button id="btnQueueClear" class="btn-ghost" title="Clear pending command queue">Clear Queue (<span id="queueCount">0</span>)</button>
+            </div>
+        </header>
+
+        <!-- 1. Trit Bus Controller Card with Live 3-Strand Braid Ribbon -->
+        <section class="card-base">
+            <div class="card-header">
+                <div class="bus-title-row">
+                    <h2 class="card-title">24-Trit Braid Bus</h2>
+                    <span id="busChiralityBadge" class="badge-tag badge-mint">Q: 0 (Neutral)</span>
+                </div>
+                <div class="bus-actions">
+                    <button id="btnCopyBus" class="btn-secondary" title="Copy 24-trit word to clipboard">Copy</button>
+                    <button id="btnPasteBus" class="btn-secondary" title="Paste 24-trit word from clipboard">Paste</button>
+                    <button id="btnInvertBus" class="btn-secondary" title="Invert bus chirality">Invert</button>
+                    <button id="btnSimplifyBus" class="btn-secondary" title="Annihilate adjacent (+1, -1) pairs">Simplify</button>
+                    <button id="btnInjectTrits" class="btn-primary" title="Inject current bus into in-game hardware">Inject to Gadget</button>
+                </div>
+            </div>
+
+            <!-- Live SVG 3-Strand Braid Knot Visualizer -->
+            <div class="braid-ribbon-container">
+                <svg id="braidSvg" class="braid-svg" viewBox="0 0 940 32" preserveAspectRatio="none"></svg>
+            </div>
+
+            <!-- 24-Trit Interactive Array (2x12) -->
+            <div class="trit-bus-layout">
+                <div class="bus-row-label">High Bank (T13 - T24)</div>
+                <div id="tritGridHigh" class="trit-grid"></div>
+
+                <div class="bus-row-label">Low Bank (T1 - T12)</div>
+                <div id="tritGridLow" class="trit-grid"></div>
+            </div>
+
+            <!-- Preset Filaments -->
+            <div class="presets-row">
+                <span class="presets-label">Presets:</span>
+                <div class="presets-list">
+                    <button class="preset-tag preset-peach" data-preset="PROTON">Proton (Q = +1)</button>
+                    <button class="preset-tag preset-lavender" data-preset="ELECTRON">Electron (Q = -1)</button>
+                    <button class="preset-tag preset-yellow" data-preset="KINK">Sine-Gordon Kink</button>
+                    <button class="preset-tag preset-sky" data-preset="QUASICRYSTAL">Quasicrystal</button>
+                    <button class="preset-tag preset-mint" data-preset="HOPFION">Hopfion Torus</button>
+                    <button class="preset-tag preset-gray" data-preset="ZERO">Clear (All 0)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2-Column Grid: B-ASM Studio & Command Dispatcher -->
+        <div class="grid-two-col">
+
+            <!-- Card: B-ASM Microcode VM Studio -->
+            <section class="card-base">
+                <div class="card-header">
+                    <h2 class="card-title">B-ASM Microcode Studio</h2>
+                    <div class="editor-header-actions">
+                        <select id="sampleProgSelect" class="select-input">
+                            <option value="">-- Samples --</option>
+                            <option value="UNKNOT">1. Unknot Annihilator</option>
+                            <option value="SOLITON_LOOP">2. Soliton Pulse</option>
+                            <option value="CHIRALITY_FLIP">3. Chirality Flip</option>
+                            <option value="MEMORY_BACKUP">4. Flash Backup</option>
+                        </select>
+                        <button id="btnSaveCustomScript" class="btn-ghost" title="Save current script to browser storage">Save</button>
+                        <select id="userScriptSelect" class="select-input" style="display:none;">
+                            <option value="">-- My Scripts --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="editor-wrap">
+                    <textarea id="basmEditor" class="code-editor" rows="5" spellcheck="false" placeholder="-- B-ASM Microcode (Ctrl+Enter to Run)&#10;SET +++---000+++---000&#10;SIMP&#10;SHFT 2&#10;SAVE 0&#10;HALT"></textarea>
+                </div>
+
+                <div class="editor-footer">
+                    <span class="meta-label">Max 32 Lines &middot; <kbd class="kbd-hint">Ctrl+Enter</kbd></span>
+                    <div class="editor-buttons">
+                        <button id="btnStepScript" class="btn-secondary">Step</button>
+                        <button id="btnUploadScript" class="btn-primary">Upload & Run</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Card: Terminal Dispatcher & Flash Memory Inspector -->
+            <section class="card-base">
+                <div class="card-header">
+                    <h2 class="card-title">Command Dispatcher</h2>
+                </div>
+
+                <form id="cmdForm" class="cmd-form">
+                    <input type="text" id="cmdInput" class="text-input" placeholder="Type command (Ctrl+K or / to focus)..." autocomplete="off">
+                    <button type="submit" class="btn-dark">Send</button>
+                </form>
+
+                <!-- Categorized Command Groups -->
+                <div class="cmd-categories">
+                    <!-- Wave Synthesizer Suite -->
+                    <div class="cat-group">
+                        <span class="cat-label">Waves:</span>
+                        <div class="quick-chips">
+                            <button class="chip-btn" data-cmd="WAVE SOLITON">SOLITON</button>
+                            <button class="chip-btn" data-cmd="WAVE COLLIDE">COLLIDE</button>
+                            <button class="chip-btn" data-cmd="WAVE STAND">STANDING</button>
+                            <button class="chip-btn" data-cmd="WAVE EEG">EEG 7.83Hz</button>
+                            <button class="chip-btn" data-cmd="WAVE CHIRP">CHIRP</button>
+                            <button class="chip-btn" data-cmd="WAVE GAUSS">GAUSS PACKET</button>
+                        </div>
+                    </div>
+
+                    <!-- Quantum Qutrit Suite -->
+                    <div class="cat-group">
+                        <span class="cat-label">Quantum:</span>
+                        <div class="quick-chips">
+                            <button class="chip-btn chip-quantum" data-cmd="GATE H">GATE H</button>
+                            <button class="chip-btn chip-quantum" data-cmd="GATE X">GATE X</button>
+                            <button class="chip-btn chip-quantum" data-cmd="GATE Z">GATE Z</button>
+                            <button class="chip-btn chip-quantum" data-cmd="GATE S">GATE S</button>
+                            <button class="chip-btn chip-quantum" data-cmd="MEASURE">MEASURE</button>
+                            <button class="chip-btn chip-quantum" data-cmd="ENTANGLE">ENTANGLE</button>
+                            <button class="chip-btn chip-quantum" data-cmd="DECOHERE">DECOHERE</button>
+                        </div>
+                    </div>
+
+                    <!-- Quasicrystal & Aperiodic Engine -->
+                    <div class="cat-group">
+                        <span class="cat-label">Aperiodic:</span>
+                        <div class="quick-chips">
+                            <button class="chip-btn" data-cmd="DIFFRACT">10-FOLD DIFF</button>
+                            <button class="chip-btn" data-cmd="INFLATE">PHI INFLATE</button>
+                            <button class="chip-btn" data-cmd="LATTICE">5D LATTICE</button>
+                            <button class="chip-btn" data-cmd="QCROT">TOGGLE ROT</button>
+                            <button class="chip-btn" data-cmd="SIGMA 4">SIGMA 4</button>
+                        </div>
+                    </div>
+
+                    <!-- System & Views -->
+                    <div class="cat-group">
+                        <span class="cat-label">System:</span>
+                        <div class="quick-chips">
+                            <button class="chip-btn" data-cmd="UNIFY">UNIFY</button>
+                            <button class="chip-btn" data-cmd="VIEW T">TERM</button>
+                            <button class="chip-btn" data-cmd="VIEW O">OSC</button>
+                            <button class="chip-btn" data-cmd="VIEW Q">QUTRIT</button>
+                            <button class="chip-btn" data-cmd="VIEW C">QC</button>
+                            <button class="chip-btn" data-cmd="AUDIO ON">AUDIO ON</button>
+                            <button class="chip-btn" data-cmd="AUDIO OFF">MUTE</button>
+                            <button class="chip-btn" data-cmd="DOCK">DOCK</button>
+                            <button class="chip-btn" data-cmd="LAMP WHITE">LAMP WHITE</button>
+                            <button class="chip-btn" data-cmd="LAMP CYAN">LAMP CYAN</button>
+                            <button class="chip-btn" data-cmd="LAMP GOLD">LAMP GOLD</button>
+                            <button class="chip-btn" data-cmd="LAMP OFF">LAMP OFF</button>
+                            <button class="chip-btn" data-cmd="CONSTANTS">CONSTANTS</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flash Memory Bank Quick Controls -->
+                <div class="mem-banks-row">
+                    <span class="cat-label">Memory:</span>
+                    <div class="bank-chips">
+                        <div class="bank-item">
+                            <span class="bank-tag">M:0</span>
+                            <button class="btn-micro" data-cmd="LOAD 0">Load</button>
+                            <button class="btn-micro" data-cmd="SAVE 0">Save</button>
+                        </div>
+                        <div class="bank-item">
+                            <span class="bank-tag">M:1</span>
+                            <button class="btn-micro" data-cmd="LOAD 1">Load</button>
+                            <button class="btn-micro" data-cmd="SAVE 1">Save</button>
+                        </div>
+                        <div class="bank-item">
+                            <span class="bank-tag">M:2</span>
+                            <button class="btn-micro" data-cmd="LOAD 2">Load</button>
+                            <button class="btn-micro" data-cmd="SAVE 2">Save</button>
+                        </div>
+                        <div class="bank-item">
+                            <span class="bank-tag">M:3</span>
+                            <button class="btn-micro" data-cmd="LOAD 3">Load</button>
+                            <button class="btn-micro" data-cmd="SAVE 3">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compact TPM Security Attestation Panel -->
+                <div class="tpm-panel">
+                    <div class="tpm-info">
+                        <span class="tpm-title">TPM Cryptographic Engine</span>
+                        <p class="tpm-sub">Berry Phase Invariant Attestation & PUF.</p>
+                    </div>
+                    <div class="tpm-actions">
+                        <button id="btnRequestPuf" class="btn-secondary">PUF</button>
+                        <button id="btnRequestTpm" class="btn-primary">Sign (137)</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- ====================
+         DOCUMENTATION MODAL PORTAL (CLEAN HEADER & LIVE SCROLL TRACKING)
+         ==================== -->
+    <div id="docsModal" class="docs-modal-overlay" style="display: none;">
+        <div class="docs-container">
+            <!-- Clean Header: Just "Documentation" Title and Search Bar -->
+            <div class="docs-header">
+                <h2 class="docs-clean-title">Documentation</h2>
+                <div class="docs-header-right">
+                    <input type="text" id="docsSearch" class="docs-search-input" placeholder="Search documentation..." autocomplete="off">
+                    <button id="btnCloseDocs" class="docs-close-btn" title="Close (Esc)">&times;</button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Categorized Sidebar + Content) -->
+            <div class="docs-body">
+                <!-- Left Sidebar Nav with ScrollSpy Tracking -->
+                <nav id="docsSidebar" class="docs-sidebar">
+                    <div class="nav-group-label">GETTING STARTED</div>
+                    <a href="#doc-quickstart" class="doc-nav-item active"><span class="nav-icon">🚀</span> 1. Quickstart & HTTP Bridge</a>
+                    <a href="#doc-hardware" class="doc-nav-item"><span class="nav-icon">🔌</span> 2. Hardware Architecture & Pins</a>
+                    <a href="#doc-controls" class="doc-nav-item"><span class="nav-icon">🎮</span> 3. Button & Keypad Mapping</a>
+
+                    <div class="nav-group-label">CORE COMPUTING & WAVES</div>
+                    <a href="#doc-ternary" class="doc-nav-item"><span class="nav-icon">⚖️</span> 4. 24-Trit Balanced Ternary Bus</a>
+                    <a href="#doc-quantum" class="doc-nav-item"><span class="nav-icon">⚛️</span> 5. Quantum Qutrit Engine (SU(3))</a>
+                    <a href="#doc-oscilloscope" class="doc-nav-item"><span class="nav-icon">〰️</span> 6. Wave Synthesizer & Oscilloscope</a>
+                    <a href="#doc-quasicrystal" class="doc-nav-item"><span class="nav-icon">💎</span> 7. Quasicrystal & Aperiodic Visualizer</a>
+
+                    <div class="nav-group-label">PROGRAMMING & CRYPTO</div>
+                    <a href="#doc-basm" class="doc-nav-item"><span class="nav-icon">💻</span> 8. B-ASM Microcode Specification</a>
+                    <a href="#doc-tpm" class="doc-nav-item"><span class="nav-icon">🔐</span> 9. TPM Security & PUF Attestation</a>
+                    <a href="#doc-memory" class="doc-nav-item"><span class="nav-icon">💾</span> 10. Flash Memory Triple-Rail Architecture</a>
+
+                    <div class="nav-group-label">THEORETICAL FOUNDATIONS</div>
+                    <a href="#doc-theorems" class="doc-nav-item"><span class="nav-icon">🌌</span> 11. Complete 25 EARTH Theorems Matrix</a>
+                    <a href="#doc-audio" class="doc-nav-item"><span class="nav-icon">🔊</span> 12. Acoustic Frequency Synthesizer</a>
+
+                    <div class="nav-group-label">QUALITY OF LIFE & DESK</div>
+                    <a href="#doc-qol" class="doc-nav-item"><span class="nav-icon">✨</span> 13. Shortcuts & Ergonomics Cheat-Sheet</a>
+                    <a href="#doc-desk" class="doc-nav-item"><span class="nav-icon">🪑</span> 14. Desk, Multitool & Telemetry</a>
+                </nav>
+
+                <!-- Right Documentation Content Pane -->
+                <div id="docsContent" class="docs-content">
+
+                    <!-- Section 1: Quickstart -->
+                    <section id="doc-quickstart" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">01</span>
+                            <h3>Quickstart & HTTP Polling Bridge Architecture</h3>
+                            <span class="doc-badge badge-hardware">Setup</span>
+                        </div>
+                        <p>The <strong>5500FP Setun 24</strong> communicates bidirectionally between Retro Gadgets and the host workstation via an ultra-low latency HTTP polling queue.</p>
+
+                        <div class="callout callout-info">
+                            <div class="callout-icon">💡</div>
+                            <div class="callout-content">
+                                <strong>Zero-Configuration Bridge:</strong> The bridge runs a lightweight Node.js HTTP server on port <code>8080</code>. The in-game Lua kernel polls <code>/api/poll</code> every second, ensuring non-blocking command execution without UDP packet loss.
+                            </div>
+                        </div>
+
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span class="code-lang">STEP-BY-STEP WORKFLOW</span>
+                                <button class="btn-copy-code" data-code="cd bridge && node bridge_server.js">Copy Command</button>
+                            </div>
+                            <pre class="code-block"><code><span class="code-comment">-- 1. In Retro Gadgets:</span>
+Open Multitool &gt; Gadget View &gt; Permissions &gt; Check "Network Access".
+Copy earth_os_kernel.lua into CPU0.lua and power on your gadget.
+
+<span class="code-comment">-- 2. In your terminal:</span>
+cd bridge &amp;&amp; node bridge_server.js
+
+<span class="code-comment">-- 3. In your browser:</span>
+Navigate to http://localhost:8080 (5500FP Setun 24 Hardware Studio).</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Section 2: Hardware Architecture -->
+                    <section id="doc-hardware" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">02</span>
+                            <h3>Hardware Components & Pinout Map</h3>
+                            <span class="doc-badge badge-hardware">Hardware</span>
+                        </div>
+                        <p>The 5500FP Setun 24 is built with 35 physical peripherals synchronized through a unified 60 Hz interrupt-driven event loop:</p>
+
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th>Component</th><th>Lua Binding</th><th>Interrupt Channel</th><th>Role & Function</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Video Display</strong></td><td><code>gdt.VideoChip0</code></td><td>Direct Raster</td><td>Compact CRT Monitor (50x40 px) with Terminal, Oscilloscope, Quantum, and QC screen renderers.</td></tr>
+                                <tr><td><strong>Keyboard Chip</strong></td><td><code>gdt.KeyboardChip0</code></td><td>Channel 1</td><td>Captures alphanumeric input, hotkeys (<code>Tab</code>, <code>Esc</code>), and Up/Down command history.</td></tr>
+                                <tr><td><strong>WiFi Receiver</strong></td><td><code>gdt.Wifi0</code></td><td>Channel 2</td><td>Asynchronous WebGet polling to <code>http://127.0.0.1:8080/api/poll</code>.</td></tr>
+                                <tr><td><strong>Triple-Rail Flash</strong></td><td><code>FlashMemory0, 1, 2</code></td><td>Direct ROM/RAM</td><td>256-word ternary memory (Rail 0: Minus, Rail 1: Zero, Rail 2: Plus).</td></tr>
+                                <tr><td><strong>Audio & Speaker</strong></td><td><code>AudioChip0, Speaker0</code></td><td>Audio Engine</td><td>Harmonic synthesizer with dual-tone frequency scaling (f/440 Hz).</td></tr>
+                                <tr><td><strong>24 Bus LEDs</strong></td><td><code>gdt.Led0 .. Led23</code></td><td>Direct Matrix</td><td>Physical real-time display of the 24-Trit balanced ternary accumulator.</td></tr>
+                                <tr><td><strong>Link Indicator LED</strong></td><td><code>gdt.Led24</code></td><td>Channel 10</td><td><strong>Server Link Indicator (Cyan)</strong>: Turns ON when connected to the bridge server.</td></tr>
+                                <tr><td><strong>Magnetic Connector</strong></td><td><code>gdt.MagneticConnector0</code></td><td>Channel 11</td><td><strong>Modular Expansion Port</strong>: Emits mechanical snap chimes upon docking/ejection.</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Section 3: Controls -->
+                    <section id="doc-controls" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">03</span>
+                            <h3>Physical Button & Macro Key Calibration</h3>
+                            <span class="doc-badge badge-qol">Controls</span>
+                        </div>
+                        <p>All physical buttons are calibrated to their verified in-game positions from top to bottom and left to right:</p>
+
+                        <div class="controls-grid">
+                            <div class="control-box">
+                                <div class="control-box-header">
+                                    <span class="control-pill pill-side">4 LEFT SIDE BUTTONS</span>
+                                </div>
+                                <div class="ctrl-list">
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-cyan">Top (Ch 9 / SIMP)</span>
+                                        <span class="ctrl-desc">Annihilates adjacent (+1, -1) crossing pairs.</span>
+                                    </div>
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-yellow">2nd (Ch 8 / INV)</span>
+                                        <span class="ctrl-desc">Flips chirality across all 24 trits (+1 &harr; -1).</span>
+                                    </div>
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-magenta">3rd (Ch 7 / VIEW)</span>
+                                        <span class="ctrl-desc">Cycles address and <strong>peeks flash memory on LEDs</strong>.</span>
+                                    </div>
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-blue">Bottom (Ch 6 / SYNC)</span>
+                                        <span class="ctrl-desc">Triggers instant WiFi bridge sync with TPM triad chord.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="control-box">
+                                <div class="control-box-header">
+                                    <span class="control-pill pill-center">3 CENTER MACRO KEYS</span>
+                                </div>
+                                <div class="ctrl-list">
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-red">Left Key (Ch 3)</span>
+                                        <span class="ctrl-desc">Inserts <code>-1</code> (Left Twist) and shifts bus right.</span>
+                                    </div>
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-white">Mid Key (Ch 4)</span>
+                                        <span class="ctrl-desc">Inserts <code>0</code> (Identity) and shifts bus right.</span>
+                                    </div>
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-green">Right Key (Ch 5)</span>
+                                        <span class="ctrl-desc">Inserts <code>+1</code> (Right Twist) and shifts bus right.</span>
+                                    </div>
+                                    <div class="ctrl-row">
+                                        <span class="ctrl-badge badge-cyan">Tab Key</span>
+                                        <span class="ctrl-desc">Cycles screen (Terminal &rarr; Osc &rarr; Quantum &rarr; QC).</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 4: Balanced Ternary Math -->
+                    <section id="doc-ternary" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">04</span>
+                            <h3>24-Trit Balanced Ternary Mathematics</h3>
+                            <span class="doc-badge badge-theory">Mathematics</span>
+                        </div>
+                        <p>Balanced ternary represents integers using radix 3 with symmetric signed digits \(t_i \in \{-1, 0, +1\}\). Unlike standard binary, balanced ternary requires <strong>zero sign bits</strong> and performs sign inversion through a trivial bitwise operation:</p>
+
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span class="code-lang">ANALYTIC VALUE EQUATION</span>
+                            </div>
+                            <pre class="code-block"><code>Value = &sum;<sub>i=1</sub><sup>24</sup> t<sub>i</sub> &times; 3<sup>(i - 1)</sup>
+Max Integer Span: -141,214,768,240 to +141,214,768,240 (&asymp; 282.4 Billion integers)
+Zero-Cost Inversion: (-Value) = &sum; (-t<sub>i</sub>) &times; 3<sup>(i - 1)</sup></code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Section 5: Quantum Qutrit Engine -->
+                    <section id="doc-quantum" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">05</span>
+                            <h3>Quantum Qutrit Engine & Phase Precession (SU(3))</h3>
+                            <span class="doc-badge badge-quantum">SU(3) Quantum</span>
+                        </div>
+                        <p>The native quantum register maintains a 3-state superposition \(|\psi\rangle = c_{-1}|-1\rangle + c_0|0\rangle + c_{+1}|+1\rangle\) evolving under an unbroken \(SU(3)\) Hamiltonian:</p>
+
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th>Command</th><th>Gate Operation</th><th>Mathematical Transformation</th><th>Acoustic Feedback</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>GATE H</code></td><td>Ternary Hadamard</td><td>Equalizes amplitudes into maximum superposition \(p_i = 1/3\).</td><td>Harmonic Chord</td></tr>
+                                <tr><td><code>GATE X</code></td><td>Ternary Pauli-X</td><td>Cyclically shifts basis states: \(|-1\rangle \to |0\rangle \to |+1\rangle \to |-1\rangle\).</td><td>High Click (1.3x)</td></tr>
+                                <tr><td><code>GATE Z</code></td><td>Phase Rotation</td><td>Advances complex quantum phase \(\theta \to \theta + \phi^{-1}\) (\(0.618\text{ rad}\)).</td><td>Resonant Tone</td></tr>
+                                <tr><td><code>GATE S</code></td><td>Golden Scaling</td><td>Scales chiral amplitudes by golden ratio \(\phi^{-1}\).</td><td>Golden Sweep</td></tr>
+                                <tr><td><code>ENTANGLE</code></td><td>Bell State Prep</td><td>Creates maximally entangled \(\frac{1}{\sqrt{3}}(|--\rangle + |00\rangle + |++\rangle)\).</td><td>Quantum Chirp</td></tr>
+                                <tr><td><code>DECOHERE</code></td><td>Environmental Damping</td><td>Decays amplitudes toward classical identity state \(|0\rangle\).</td><td>Low Click (0.5x)</td></tr>
+                                <tr><td><code>MEASURE</code></td><td>Wavefunction Collapse</td><td>Collapses superposition according to Born probabilities \(P(i) = |c_i|^2\), writes to LED 1.</td><td>Collapse Chirp</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Section 6: Wave Synthesizer -->
+                    <section id="doc-oscilloscope" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">06</span>
+                            <h3>Multi-Mode Wave Synthesizer & Oscilloscope</h3>
+                            <span class="doc-badge badge-theory">Waves</span>
+                        </div>
+                        <p>The Oscilloscope screen (<code>VIEW O</code>) features a full dynamic waveform generator simulating hydrodynamics, brainwaves, and solitons:</p>
+
+                        <div class="wave-grid">
+                            <div class="wave-card">
+                                <h4>1. Live Continuous Bus Scope</h4>
+                                <p><strong>Default Mode:</strong> Continuously graphs the live 24-trit accumulator as a smoothed analog voltage/phase trace in real time.</p>
+                            </div>
+                            <div class="wave-card">
+                                <h4>2. Dual Soliton Collision (<code>WAVE COLLIDE</code>)</h4>
+                                <p>Two Sine-Gordon kinks race from opposite ends, collide at cell 12 with topological phase shift, and pass through without dissipating.</p>
+                            </div>
+                            <div class="wave-card">
+                                <h4>3. 3-Node Standing Wave (<code>WAVE STAND</code>)</h4>
+                                <p>Simulates acoustic standing wave resonance \(A \sin(kx) \cos(\omega t)\) with fixed stationary nodes across the LEDs.</p>
+                            </div>
+                            <div class="wave-card">
+                                <h4>4. Schumann EEG Neural Rhythm (<code>WAVE EEG</code>)</h4>
+                                <p>Superimposition of \(7.83\text{ Hz}\) (Fundamental), \(4.84\text{ Hz}\) (\(\theta\)), and \(12.67\text{ Hz}\) (\(\alpha_1\)) brainwave rhythms.</p>
+                            </div>
+                            <div class="wave-card">
+                                <h4>5. Quantum Wave Packet (<code>WAVE GAUSS</code>)</h4>
+                                <p>Visualizes Heisenberg wave packet dispersion \(\Delta x(t) = \sqrt{\sigma^2 + (\hbar t / m\sigma)^2}\) spreading across the CRT.</p>
+                            </div>
+                            <div class="wave-card">
+                                <h4>6. Frequency Chirp (<code>WAVE CHIRP</code>)</h4>
+                                <p>High-energy accelerating frequency sweep with polyphonic dual-tone acoustic modulation.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 7: Quasicrystal Visualizer -->
+                    <section id="doc-quasicrystal" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">07</span>
+                            <h3>Quasicrystal & Aperiodic Visualizer</h3>
+                            <span class="doc-badge badge-theory">Quasicrystal</span>
+                        </div>
+                        <p>The Quasicrystal screen (<code>VIEW C</code>) visualizes aperiodic long-range order and 5-fold Penrose symmetry:</p>
+
+                        <ul class="feature-bullets">
+                            <li><strong>Penrose Golden Star Rosette (<code>LATTICE</code>):</strong> A clean, rotating 10-pointed star with outer radius \(R=10\) and inner golden radius \(R=6\) spinning through \(\phi^{-1}\) angles.</li>
+                            <li><strong>10-Fold Bragg Diffraction Radar (<code>DIFFRACT</code>):</strong> Recreates Dan Shechtman's Nobel prize-winning 10-spot electron diffraction reciprocal lattice.</li>
+                            <li><strong>Fibonacci Golden Spiral (<code>INFLATE</code>):</strong> Self-similar fractal expansion scaling by \(\phi = 1.6180339887\).</li>
+                            <li><strong>Rotation Toggle (<code>QCROT</code>):</strong> Toggles continuous 5D rotation on/off.</li>
+                        </ul>
+                    </section>
+
+                    <!-- Section 8: B-ASM Specification -->
+                    <section id="doc-basm" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">08</span>
+                            <h3>B-ASM Microcode VM Instruction Set</h3>
+                            <span class="doc-badge badge-hardware">Microcode</span>
+                        </div>
+                        <p>The B-ASM virtual machine executes topological microcode routines stored in fast memory (up to 32 instructions):</p>
+
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th>Opcode</th><th>Arguments</th><th>Action</th><th>Example</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>SET</code></td><td><code>&lt;word&gt;</code></td><td>Loads 24-trit word directly into accumulator.</td><td><code>SET +++---000+++---000</code></td></tr>
+                                <tr><td><code>SIMP</code></td><td>none</td><td>Annihilates adjacent (+1, -1) and (-1, +1) crossing pairs.</td><td><code>SIMP</code></td></tr>
+                                <tr><td><code>SHFT</code></td><td><code>&lt;steps&gt;</code></td><td>Shifts the 24-trit bus right (+) or left (-).</td><td><code>SHFT 2</code></td></tr>
+                                <tr><td><code>ROT</code></td><td><code>&lt;steps&gt;</code></td><td>Circularly rotates the 24-trit bus.</td><td><code>ROT -1</code></td></tr>
+                                <tr><td><code>INV</code></td><td>none</td><td>Inverts chirality of all 24 trits (+1 &harr; -1).</td><td><code>INV</code></td></tr>
+                                <tr><td><code>LOAD</code></td><td><code>&lt;addr&gt;</code></td><td>Loads 24-trit word from flash address (0..255).</td><td><code>LOAD 0</code></td></tr>
+                                <tr><td><code>SAVE</code></td><td><code>&lt;addr&gt;</code></td><td>Saves accumulator into flash address (0..255).</td><td><code>SAVE 1</code></td></tr>
+                                <tr><td><code>JMP</code></td><td><code>&lt;line&gt;</code></td><td>Unconditional jump to instruction index.</td><td><code>JMP 1</code></td></tr>
+                                <tr><td><code>JZ</code></td><td><code>&lt;line&gt;</code></td><td>Jump if net chirality \(\sum \text{ACC} = 0\).</td><td><code>JZ 8</code></td></tr>
+                                <tr><td><code>JP</code></td><td><code>&lt;line&gt;</code></td><td>Jump if net chirality \(\sum \text{ACC} > 0\).</td><td><code>JP 12</code></td></tr>
+                                <tr><td><code>JN</code></td><td><code>&lt;line&gt;</code></td><td>Jump if net chirality \(\sum \text{ACC} < 0\).</td><td><code>JN 14</code></td></tr>
+                                <tr><td><code>HALT</code></td><td>none</td><td>Halts VM execution and sounds TPM chime.</td><td><code>HALT</code></td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Section 9: TPM Cryptography -->
+                    <section id="doc-tpm" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">09</span>
+                            <h3>TPM Cryptographic Engine & PUF Attestation</h3>
+                            <span class="doc-badge badge-quantum">Cryptography</span>
+                        </div>
+                        <p>The on-chip Topological Processing Module derives hardware entropy from physical lattice imperfections and Berry phase topological invariants:</p>
+
+                        <div class="code-card">
+                            <div class="code-card-header">
+                                <span class="code-lang">PUF & ATTESTATION ALGORITHM</span>
+                            </div>
+                            <pre class="code-block"><code>1. Physical Unclonable Function (PUF):
+   Lattice PUF = &sum; (FlashMemory0[i] ^ FlashMemory1[i] ^ FlashMemory2[i])
+
+2. Topological Signature Generation (SIGN &lt;nonce&gt;):
+   Twist Action &tau; = &sum;<sub>i=1</sub><sup>24</sup> (ACC[i] &times; i<sup>2</sup>)
+   Berry Phase &Phi;<sub>B</sub> = (2&pi; / 3) &times; TotalCrossings
+   Signature Hash = |(&tau; &times; &phi; + &Phi;<sub>B</sub> &times; Nonce) mod 1,000,000|</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Section 10: Memory Architecture -->
+                    <section id="doc-memory" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">10</span>
+                            <h3>Triple-Rail Flash Memory Bank Architecture</h3>
+                            <span class="doc-badge badge-hardware">Memory</span>
+                        </div>
+                        <p>Flash memory is physically split across 3 independent hardware rails (<code>FlashMemory0</code>, <code>1</code>, <code>2</code>) storing up to 256 words:</p>
+
+                        <div class="callout callout-tip">
+                            <div class="callout-icon">💾</div>
+                            <div class="callout-content">
+                                <strong>Memory Peek Feature (QoL):</strong> Pressing the Magenta Side Button (<code>VIEW MEM</code>) reads address \(N\) and previews its saved 24-trit pattern directly on the physical LEDs with a cyan/magenta glow for 1.5 seconds without overwriting your current accumulator!
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 11: 25 EARTH Theorems -->
+                    <section id="doc-theorems" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">11</span>
+                            <h3>Complete 25 Universal EARTH Physics Theorems</h3>
+                            <span class="doc-badge badge-theory">Physics</span>
+                        </div>
+                        <p>The kernel provides built-in analytic calculation engines for all 25 fundamental theorems of Elastic Aether R(3) Twist Hydrodynamics:</p>
+
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th>Theorem</th><th>CLI Command</th><th>Analytic Relation & Formula</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>1. Ginzburg-Landau</strong></td><td><code>THEORY</code></td><td>\(\mathcal{L} = -\frac{\lambda_0}{4}(\psi^2 - 1)^2\), \(E_{\text{proton}} = 938.272\text{ MeV}\)</td></tr>
+                                <tr><td><strong>2. Gauge Bosons</strong></td><td><code>BOSON &lt;type&gt;</code></td><td>Closed vortex links (Photon, \(W^\pm\), \(Z^0\), Gluon octet)</td></tr>
+                                <tr><td><strong>3. Unified 4 Forces</strong></td><td><code>FORCE_CALC</code></td><td>Strong, EM, Weak, Gravity scaled by \(\phi^{18}\), \(\phi^{62}\)</td></tr>
+                                <tr><td><strong>4. Intrinsic Curvature</strong></td><td><code>CURV</code></td><td>\(\kappa_{\text{eff}} = \sqrt{6} \times \phi^{-2} = 0.9355\text{ fm}^{-1}\)</td></tr>
+                                <tr><td><strong>5. Fermion Topology</strong></td><td><code>FERMION &lt;type&gt;</code></td><td>3-Strand braid knot topology \((e, \mu, \tau)\)</td></tr>
+                                <tr><td><strong>6. Aperiodic Morphism</strong></td><td><code>SIGMA &lt;depth&gt;</code></td><td>\(\sigma: 1 \to 12, 2 \to 13, 3 \to 21\) (Substitution sequence)</td></tr>
+                                <tr><td><strong>7. Cosmic Growth</strong></td><td><code>GROWTH &lt;n&gt;</code></td><td>Scale hierarchy \(r_n = \xi_0 \times \phi^n\) (\(n=1..44\))</td></tr>
+                                <tr><td><strong>8. Cosmological Lambda</strong></td><td><code>COSMO &lt;1-3&gt;</code></td><td>\(\Lambda = 1.19 \times 10^{-52}\text{ m}^{-2}\), CMB peaks \((220, 356, 576)\)</td></tr>
+                                <tr><td><strong>9. Non-EM Density</strong></td><td><code>NONEM &lt;rho&gt;</code></td><td>Nuclear coherence \(\xi(\rho) = \xi_0 (\rho_{\text{nuc}}/\rho)^{1/3}\)</td></tr>
+                                <tr><td><strong>10. Helical Phase Flow</strong></td><td><code>PHASE</code></td><td>Phase angle \(\theta(s, t) = (s - ct)/\xi_0\)</td></tr>
+                                <tr><td><strong>11. Golden Stability</strong></td><td><code>PHI</code></td><td>\(\phi = 1.6180339887\), KAM Torus non-resonance theorem</td></tr>
+                                <tr><td><strong>12. Algebraic Pi</strong></td><td><code>PI</code></td><td>\(\pi_{\text{EARTH}} = \sqrt{30 - 6\sqrt{5}}/2 \approx 3.14159265\)</td></tr>
+                                <tr><td><strong>13. Reduced Planck</strong></td><td><code>HBAR</code></td><td>\(\hbar\) derived from vortex circulation action</td></tr>
+                                <tr><td><strong>14. Quantum Superposition</strong></td><td><code>QUT</code></td><td>Qutrit ternary superposition in braid crossings</td></tr>
+                                <tr><td><strong>15. Quantum Gravity</strong></td><td><code>QG</code></td><td>Spin-2 metric perturbation \(g_{00} = -(1 + 2\Phi/c^2)\)</td></tr>
+                                <tr><td><strong>16. Quasicrystal Projection</strong></td><td><code>QC</code></td><td>5D \(\to\) 2D Penrose golden projection cut</td></tr>
+                                <tr><td><strong>17. Spinor Parity</strong></td><td><code>R3</code></td><td>\(720^\circ\) rotation invariance in \(R(3)\)</td></tr>
+                                <tr><td><strong>18. Berry Phase Flux</strong></td><td><code>FLUX</code></td><td>Strand sharing Berry flux \(\Phi_B = 2\pi/3\text{ rad}\)</td></tr>
+                                <tr><td><strong>19. Axon Conduction</strong></td><td><code>AXON</code></td><td>\(d/D = 0.618\), conduction velocity \(120\text{ m/s}\)</td></tr>
+                                <tr><td><strong>20. Kink Soliton</strong></td><td><code>SOLITON</code></td><td>Relativistic Sine-Gordon kink wave propagation</td></tr>
+                                <tr><td><strong>21. Brainwave Harmonics</strong></td><td><code>EEG</code></td><td>7 Golden Schumann harmonics (\(7.83\text{ Hz}\) to \(33.17\text{ Hz}\))</td></tr>
+                                <tr><td><strong>22. Decoherence Times</strong></td><td><code>DIS &lt;key&gt;</code></td><td>Neurodegeneration timescales (Alzheimer, Parkinson, ALS)</td></tr>
+                                <tr><td><strong>23. Theory-Zero Axioms</strong></td><td><code>TH0</code></td><td>Morphological core topology axioms</td></tr>
+                                <tr><td><strong>24. Vortex Tube Radius</strong></td><td><code>TUBE</code></td><td>Constant tube radius \(r_t = \xi_0 \times \phi^{-2} = 0.05716\text{ fm}\)</td></tr>
+                                <tr><td><strong>25. Master Unification</strong></td><td><code>UNIFY</code></td><td>Full closure proof across all 25 fundamental relations</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Section 12: Audio Frequencies -->
+                    <section id="doc-audio" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">12</span>
+                            <h3>Acoustic Synthesizer Frequency Matrix</h3>
+                            <span class="doc-badge badge-hardware">Audio</span>
+                        </div>
+                        <p>The audio engine maps hardware operations to distinct harmonic pitch multipliers:</p>
+
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th>Operation</th><th>Musical Note</th><th>Target Frequency</th><th>Pitch Multiplier (f / 440 Hz)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Trit -1 Click</strong></td><td>F4</td><td>349.2 Hz</td><td>0.70x</td></tr>
+                                <tr><td><strong>Trit 0 Click</strong></td><td>A4</td><td>440.0 Hz</td><td>1.00x</td></tr>
+                                <tr><td><strong>Trit +1 Click</strong></td><td>D5</td><td>587.3 Hz</td><td>1.30x</td></tr>
+                                <tr><td><strong>B-SIMP Annihilation</strong></td><td>Dual Chirp</td><td>G5 &rarr; A5</td><td>1.50x / 2.00x</td></tr>
+                                <tr><td><strong>B-INV Chirality Flip</strong></td><td>E5</td><td>659.3 Hz</td><td>1.60x</td></tr>
+                                <tr><td><strong>TPM Triad Chord</strong></td><td>C5 - E5 - G5</td><td>523 - 659 - 784 Hz</td><td>1.00x / 1.25x / 1.50x</td></tr>
+                                <tr><td><strong>EEG Fundamental</strong></td><td>Schumann Mode</td><td>7.83 Hz</td><td>Scaled resonance mode</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Section 13: QoL & Shortcuts -->
+                    <section id="doc-qol" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">13</span>
+                            <h3>Shortcuts & Ergonomics Cheat-Sheet</h3>
+                            <span class="doc-badge badge-qol">Shortcuts</span>
+                        </div>
+                        <p>Master the full system with these fast workflow shortcuts:</p>
+
+                        <div class="shortcuts-grid">
+                            <div class="shortcut-col">
+                                <h4>🖥️ Web Studio Shortcuts</h4>
+                                <ul class="shortcut-list">
+                                    <li><kbd class="kbd-hint">Ctrl + Enter</kbd> &mdash; Instantly Upload & Run B-ASM script.</li>
+                                    <li><kbd class="kbd-hint">Ctrl + K</kbd> or <kbd class="kbd-hint">/</kbd> &mdash; Focus Command Dispatcher.</li>
+                                    <li><kbd class="kbd-hint">1</kbd> / <kbd class="kbd-hint">0</kbd> / <kbd class="kbd-hint">-</kbd> &mdash; Paint trits under mouse cursor.</li>
+                                    <li><kbd class="kbd-hint">Esc</kbd> &mdash; Close Documentation modal.</li>
+                                </ul>
+                            </div>
+
+                            <div class="shortcut-col">
+                                <h4>🎮 In-Game Gadget Shortcuts</h4>
+                                <ul class="shortcut-list">
+                                    <li><kbd class="kbd-hint">&uarr;</kbd> / <kbd class="kbd-hint">&darr;</kbd> &mdash; Cycle Terminal command history.</li>
+                                    <li><kbd class="kbd-hint">Tab</kbd> &mdash; Cycle CRT screen (Term &rarr; Osc &rarr; Q &rarr; QC).</li>
+                                    <li><code>CLEAR</code> or <code>CLS</code> &mdash; Wipe CRT buffer.</li>
+                                    <li><code>AUDIO OFF</code> / <code>ON</code> &mdash; Mute / unmute audio clicks.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 14: Desk, Multitool & Dual-Highway Telemetry -->
+                    <section id="doc-desk" class="doc-section">
+                        <div class="section-header">
+                            <span class="section-num">14</span>
+                            <h3>Workbench Desk, Multitool & Dual-Highway Telemetry</h3>
+                            <span class="doc-badge badge-hardware">Environment</span>
+                        </div>
+                        <p>The 5500FP Setun 24 interfaces directly with your Retro Gadgets workbench environment and hosts a real-time bidirectional telemetry queue:</p>
+
+                        <div class="callout callout-info">
+                            <div class="callout-icon">🪑</div>
+                            <div class="callout-content">
+                                <strong>Dual-Highway Real-Time Synchronization:</strong> In addition to receiving commands via <code>WebGet(/api/poll)</code>, the gadget periodically posts its full 24-trit accumulator, active screen mode, and quantum state via <code>WebPostData(/api/telemetry)</code>. The Web Studio mirrors physical hardware in real time!
+                            </div>
+                        </div>
+
+                        <table class="doc-table">
+                            <thead>
+                                <tr><th>System / Method</th><th>API Call</th><th>Behavior & Integration</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Multitool Screen</strong></td><td><code>log(text)</code>, <code>setFgColor(id)</code></td><td>ANSI color diagnostic trace (Cyan=System, Green=Command, Yellow=Trace, Magenta=Quantum).</td></tr>
+                                <tr><td><strong>Desk Minitool Pager</strong></td><td><code>desk.ShowMessage(msg, false)</code></td><td>Flashes transient hardware notifications directly on the physical desk pager.</td></tr>
+                                <tr><td><strong>Desk Lamp Lighting</strong></td><td><code>desk.SetLampColor(color)</code></td><td>Atmospheric lighting synced to gadget state (Cyan=Quantum, Gold=Wave, Red=Alert).</td></tr>
+                                <tr><td><strong>Lamp CLI Control</strong></td><td><code>LAMP ON</code> / <code>LAMP CYAN</code> / <code>OFF</code></td><td>Manual control of desk lighting color and synchronization mode.</td></tr>
+                                <tr><td><strong>Magnetic Connector</strong></td><td><code>gdt.MagneticConnector0</code> (Ch 11)</td><td>Hot-plug expansion bay with mechanical locking audio chimes.</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
