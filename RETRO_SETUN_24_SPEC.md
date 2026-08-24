@@ -78,3 +78,41 @@ A standard 24-trit word physically represents a 24-step topological sequence (a 
 - **Desk Minitool Pager**: Pushes notifications on quantum state changes, wave synthesis, and magnetic docking (`desk.ShowMessage`, `desk.ShowWarning`).
 - **Desk Lamp Atmosphere**: Dynamically shifts ambient desk lighting color (`desk.SetLampColor`) between Cyan (Quantum), Gold (Soliton), and Red (Alert).
 - **Dual-Highway Telemetry**: Regularly posts 24-trit bus and quantum register states via `Wifi0:WebPostData` to keep the Web Studio synchronized in real time.
+
+---
+
+## 5. Retro Gadgets WiFi Protocol & Dual-Highway Telemetry
+
+### 5.1 Native Engine Constraints
+- **REST Request/Response Model**: The Retro Gadgets engine does not support raw TCP sockets or persistent WebSockets. All external network I/O is asynchronous HTTP request-driven (`WebGet`, `WebPostData`, `WebPostForm`, `WebPutData`, `WebCustomRequest`).
+- **Event-Driven Asynchronous Lifecycle**: Every web call returns an immediate numeric `RequestHandle`. When the external server responds, the CPU triggers `WifiWebResponseEvent` on **Channel 2** (`eventChannel2(sender, event)`).
+
+### 5.2 Interleaved Dual-Highway Polling Schedule
+To prevent buffer contention on the 60 Hz CPU loop, network requests are phase-shifted:
+
+```mermaid
+sequenceDiagram
+    participant CPU as 5500FP Setun 24 (CPU0)
+    participant Bridge as Bridge Server (:8080)
+    participant Web as Web Studio Companion
+
+    Note over CPU: Frame Tick 30 (0.50s)
+    CPU->>Bridge: GET /api/poll (Async)
+    Bridge-->>CPU: 200 OK ["TRITS:...", "EXEC:...", or "IDLE"]
+    Note over CPU: EventChannel2 dispatches payload to VM
+
+    Note over CPU: Frame Tick 60 (1.00s)
+    CPU->>Bridge: POST /api/telemetry (JSON state)
+    Bridge-->>CPU: 200 OK ["ACK"]
+    Bridge->>Web: Live Bus & Qutrit Push
+```
+
+- **Inbound Command Highway (`GET /api/poll`)**:
+  - Polled every 30 ticks ($0.5\text{ s}$).
+  - Retrieves queued web UI actions (`TRITS:+++---...`, `EXEC:GATE H`, `TPM:GEN`).
+- **Outbound Telemetry Highway (`POST /api/telemetry`)**:
+  - Pushed every 60 ticks ($1.0\text{ s}$).
+  - Delivers serialized JSON state: `{ "trits": "...", "mode": "...", "qProb": [...], "purity": 0.98, "netQ": 0, "docked": false }`.
+- **Manual Hardware Override (`eventChannel6`)**:
+  - Pressing the bottom side button (`SYNC`) immediately fires `wifi:WebGet("http://127.0.0.1:8080/api/poll")` without waiting for the timer cycle.
+
