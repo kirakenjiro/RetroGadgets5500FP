@@ -8,8 +8,8 @@ Thank you for your interest in contributing to the **5500FP Setun 24** project! 
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/kirakenjiro/RetroGadgets5500FP
-   cd RetroGadgets5500FP
+   git clone https://github.com/kirakenjiro/retroGadgets5500Fp
+   cd retroGadgets5500Fp
    ```
 
 2. **Run the Bridge Server**:

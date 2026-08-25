@@ -49,8 +49,8 @@
 ### 2. Start the Web Companion Bridge
 ```bash
 # Clone the repository
-git clone https://github.com/kirakenjiro/RetroGadgets5500FP
-cd RetroGadgets5500FP
+git clone https://github.com/kirakenjiro/retroGadgets5500Fp
+cd retroGadgets5500Fp
 
 # Start the bridge server
 npm start
